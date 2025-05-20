@@ -1,28 +1,24 @@
 import { useState } from "react";
 import { Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
-import type { FormData } from "../types/user";
 import type { SignUpProps } from "../types/props";
-import { register } from "../services/authService";
+import type { LoginForm } from "../types/user";
+import { login } from "../services/authService";
+import { useNavigate } from "react-router-dom";
 
-export default function SignUp({ role }: SignUpProps) {
+export default function SignIn({ role }: SignUpProps) {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState({
-    firstName: "",
-    lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitMessage, setSubmitMessage] = useState({ type: "", text: "" });
 
@@ -39,13 +35,6 @@ export default function SignUp({ role }: SignUpProps) {
     let errorMessage = "";
 
     switch (name) {
-      case "firstName":
-      case "lastName":
-        if (!value.trim())
-          errorMessage = `${
-            name === "firstName" ? "First" : "Last"
-          } name is required`;
-        break;
       case "email":
         if (!value.trim()) errorMessage = "Email is required";
         else if (!validateEmail(value))
@@ -55,11 +44,6 @@ export default function SignUp({ role }: SignUpProps) {
         if (!value) errorMessage = "Password is required";
         else if (!validatePassword(value))
           errorMessage = "Password must be at least 8 characters";
-        break;
-      case "confirmPassword":
-        if (!value) errorMessage = "Please confirm your password";
-        else if (value !== formData.password)
-          errorMessage = "Passwords do not match";
         break;
       default:
         break;
@@ -91,20 +75,21 @@ export default function SignUp({ role }: SignUpProps) {
     e?: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     if (e) e.preventDefault();
+    // console.log(role);
 
     // Validate all fields before submission
-    const newErrors: FormData = {
-      firstName: "",
-      lastName: "",
+    const newErrors: LoginForm = {
       email: "",
       password: "",
-      confirmPassword: "",
     };
     let hasErrors = false;
 
-    (Object.keys(formData) as (keyof FormData)[]).forEach((key) => {
-      const errorMessage = validateField(key, formData[key]);
-      newErrors[key] = errorMessage;
+    Object.keys(formData).forEach((key) => {
+      const errorMessage = validateField(
+        key,
+        formData[key as keyof typeof formData]
+      );
+      newErrors[key as keyof typeof formData] = errorMessage;
       if (errorMessage) hasErrors = true;
     });
 
@@ -125,29 +110,30 @@ export default function SignUp({ role }: SignUpProps) {
         ...formData,
         role: role,
       };
-
-      const response = await register(payload);
+      const response = await login(payload);
 
       if (response.status === 200) {
+        const { user } = response.data;
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("firstName", user.firstName);
+        localStorage.setItem("lastName", user.lastName);
         setSubmitMessage({
           type: "success",
-          text: "Registration successful! Please check your email to verify your account.",
+          text: "Login successful! Redirecting...",
         });
-
-        // Reset form after successful submission
         setFormData({
-          firstName: "",
-          lastName: "",
           email: "",
           password: "",
-          confirmPassword: "",
         });
+        setTimeout(() => {
+          navigate("/dashboard/admin");
+        }, 100);
       }
     } catch (error) {
       console.error(error);
       setSubmitMessage({
         type: "error",
-        text: "Registration failed. Please try again later.",
+        text: "Login failed. Please check your credentials.",
       });
     } finally {
       setLoading(false);
@@ -174,10 +160,8 @@ export default function SignUp({ role }: SignUpProps) {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800">Join us today</h1>
-          <p className="text-gray-600 mt-2">
-            {role === "admin" ? "Admin" : "Customer" } Create your account to get started
-          </p>
+          <h1 className="text-3xl font-bold text-gray-800">Welcome back</h1>
+          <p className="text-gray-600 mt-2">Sign in to continue</p>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -201,59 +185,7 @@ export default function SignUp({ role }: SignUpProps) {
 
             <div role="form">
               <div className="space-y-5">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      htmlFor="firstName"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      First Name
-                    </label>
-                    <input
-                      id="firstName"
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full px-4 py-2 rounded-lg border text-black ${
-                        errors.firstName ? "border-red-500" : "border-gray-300"
-                      } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
-                      placeholder="John"
-                    />
-                    {errors.firstName && (
-                      <p className="mt-1 text-xs text-red-600">
-                        {errors.firstName}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="lastName"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Last Name
-                    </label>
-                    <input
-                      id="lastName"
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full px-4 py-2 rounded-lg text-black border ${
-                        errors.lastName ? "border-red-500" : "border-gray-300"
-                      } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
-                      placeholder="Doe"
-                    />
-                    {errors.lastName && (
-                      <p className="mt-1 text-xs text-red-600">
-                        {errors.lastName}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                <div className="grid grid-cols-2 gap-4"></div>
                 <div>
                   <label
                     htmlFor="email"
@@ -314,51 +246,6 @@ export default function SignUp({ role }: SignUpProps) {
                       {errors.password}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-gray-500">
-                    Password must be at least 8 characters
-                  </p>
-                </div>
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Confirm Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full px-4 py-2 text-black rounded-lg border ${
-                        errors.confirmPassword
-                          ? "border-red-500"
-                          : "border-gray-300"
-                      } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
-                      placeholder="Confirm your password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="mt-1 text-xs text-red-600">
-                      {errors.confirmPassword}
-                    </p>
-                  )}
                 </div>
               </div>
               <button
@@ -393,9 +280,25 @@ export default function SignUp({ role }: SignUpProps) {
                     Processing...
                   </>
                 ) : (
-                  "Create Account"
+                  "Sign In"
                 )}
               </button>
+              <div className="flex items-center justify-between gap-5">
+                <button
+                  onClick={() => navigate("/register/admin")}
+                  className={`mt-6 w-full flex justify-center items-center py-3 px-4 border border-black rounded-lg shadow-sm text-black  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm font-medium
+                }`}
+                >
+                  Admin Signup
+                </button>
+                <button
+                  onClick={() => navigate("/register/customer")}
+                  className={`mt-6 w-full flex justify-center items-center py-3 px-4 border border-black rounded-lg shadow-sm text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm font-medium
+                }`}
+                >
+                  Customer Signup
+                </button>
+              </div>
             </div>
           </div>
         </div>

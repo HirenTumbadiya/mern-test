@@ -1,11 +1,12 @@
 import axios from "axios";
 import type { RegisterForm } from "../types/user";
 
-export const registerCustomer = (data: RegisterForm) =>
-  axios.post("/api/register/customer", data);
+const API = axios.create({
+  baseURL: "http://localhost:8080",
+});
 
-export const registerAdmin = (data: RegisterForm) =>
-  axios.post("/api/register/admin", data);
+export const register = (data: RegisterForm) =>
+  API.post("/api/register", data);
 
-export const loginAdmin = (data: { email: string; password: string }) =>
-  axios.post("/api/login/admin", data);
+export const login = (data: { email: string; password: string }) =>
+  API.post("/api/login", data);
