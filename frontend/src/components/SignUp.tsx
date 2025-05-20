@@ -92,7 +92,6 @@ export default function SignUp({ role }: SignUpProps) {
   ) => {
     if (e) e.preventDefault();
 
-    // Validate all fields before submission
     const newErrors: FormData = {
       firstName: "",
       lastName: "",
@@ -134,7 +133,6 @@ export default function SignUp({ role }: SignUpProps) {
           text: "Registration successful! Please check your email to verify your account.",
         });
 
-        // Reset form after successful submission
         setFormData({
           firstName: "",
           lastName: "",

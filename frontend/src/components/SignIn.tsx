@@ -59,7 +59,6 @@ export default function SignIn({ role }: SignUpProps) {
     const errorMessage = validateField(name, value);
     setErrors({ ...errors, [name]: errorMessage });
 
-    // Clear success/error message when form is being edited
     if (submitMessage.text) {
       setSubmitMessage({ type: "", text: "" });
     }
@@ -76,8 +75,6 @@ export default function SignIn({ role }: SignUpProps) {
   ) => {
     if (e) e.preventDefault();
     // console.log(role);
-
-    // Validate all fields before submission
     const newErrors: LoginForm = {
       email: "",
       password: "",

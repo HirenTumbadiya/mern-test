@@ -1,4 +1,3 @@
-// authController.ts
 import { Request, Response } from 'express';
 import { getDbClient } from '../db/db'
 import { sendRegistrationEmail } from '../utils/mailer';
@@ -15,6 +14,8 @@ export const registerUser = async (req: Request, res: Response) => {
     if (checkEmailResult.rows.length > 0) {
       return res.status(400).json({ error: 'Email already in use' });
     }
+
+    // TODO hash password before storing
 
     const query = 'INSERT INTO users (first_name, last_name, email, password, role) VALUES ($1, $2, $3, $4, $5)';
     const values = [firstName, lastName, email, password, role];
@@ -53,7 +54,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
     const user = result.rows[0];
 
-    // In production, use bcrypt to compare hashed passwords
+    // TODO hash and compare password
     if (user.password !== password) {
       return res.status(401).json({ error: 'Invalid email, password or role' });
     }

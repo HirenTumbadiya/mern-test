@@ -4,7 +4,7 @@ const PrivateRoute = ({ isAuthenticated }: { isAuthenticated: boolean }) => {
     return <Navigate to="/login/admin" />;
   }
 
-  return <Outlet />; // This renders the child components (like the dashboard)
+  return <Outlet />;
 };
 
 export default PrivateRoute;
